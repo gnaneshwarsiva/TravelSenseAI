@@ -1,0 +1,36 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Get Dependencies
+        run: cd frontend && flutter pub get
+        
+      - name: Build APK
+        run: cd frontend && flutter build apk --release
+        
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TravelSenseAI-APK
+          path: frontend/build/app/outputs/flutter-apk/app-release.apk

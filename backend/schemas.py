@@ -1,0 +1,173 @@
+from pydantic import BaseModel
+from typing import Optional, List
+
+class UserCreate(BaseModel):
+    email: str
+    password: str
+
+# This defines the structure of the token we send back upon successful login
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+from datetime import date as dt_date
+from typing import Optional
+
+class TripBase(BaseModel):
+    destination: str
+    start_date: Optional[dt_date] = None
+    end_date: Optional[dt_date] = None
+    budget: Optional[float] = 0.0
+    spent: Optional[float] = 0.0
+    image_url: Optional[str] = None
+    weather_temp: Optional[int] = 25
+
+class TripCreate(TripBase):
+    pass
+
+class TripUpdate(BaseModel):
+    destination: Optional[str] = None
+    start_date: Optional[dt_date] = None
+    end_date: Optional[dt_date] = None
+    budget: Optional[float] = None
+    spent: Optional[float] = None
+    image_url: Optional[str] = None
+    weather_temp: Optional[int] = None
+
+class TripOut(TripBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+class ExpenseBase(BaseModel):
+    trip_id: int
+    title: str
+    amount: float
+    category: str
+    date: Optional[dt_date] = None
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseUpdate(BaseModel):
+    trip_id: Optional[int] = None
+    title: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    date: Optional[dt_date] = None
+
+class ExpenseOut(ExpenseBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+# -----------------
+# ML PREDICTION SCHEMAS
+# -----------------
+class CostPredictionRequest(BaseModel):
+    source: Optional[str] = None
+    destination: str
+    trip_days: Optional[int] = None
+    travelers_count: int
+    transport_mode: str
+    hotel_type: str
+    season: str
+    traveler_type: str
+
+class CostPredictionResponse(BaseModel):
+    predicted_cost_inr: float
+    assumed_days: int
+
+class DurationPredictionRequest(BaseModel):
+    destination: str
+    total_cost_inr: float
+    travelers_count: int
+    transport_mode: str
+    hotel_type: str
+    season: str
+    traveler_type: str
+
+class DurationPredictionResponse(BaseModel):
+    predicted_trip_days: Optional[int] = None
+
+class RecommendationRequest(BaseModel):
+    traveler_type: str
+    top_n: int = 3
+    preferences: Optional[List[str]] = None
+
+class RecommendedDestination(BaseModel):
+    id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    match_score: float = 0.90
+    reason: Optional[str] = None
+    estimated_budget: float = 25000.0
+    duration_days: int = 4
+
+class RecommendationResponse(BaseModel):
+    traveler_type: str
+    recommendations: list[RecommendedDestination]
+
+class SegmentationResponse(BaseModel):
+    total_trips: int
+    avg_budget: float
+    traveler_segment: str
+
+
+class GenerateItineraryRequest(BaseModel):
+    destination: str
+    days: int
+    traveler_type: Optional[str] = "Standard Traveler"
+
+class GenerateItineraryResponse(BaseModel):
+    destination: str
+    days: int
+    itinerary_text: str
+
+
+
+from typing import Dict, List
+
+class CategorySpend(BaseModel):
+    category: str
+    amount: float
+
+class MonthlySpend(BaseModel):
+    month: str
+    amount: float
+
+class TripBenchmark(BaseModel):
+    tripId: int
+    destination: str
+    actualSpent: float
+    predictedCost: float
+    difference: float
+    isUnderBudget: bool
+    days: int
+
+class BudgetEfficiency(BaseModel):
+    score: int
+    totalPredicted: float
+    totalActual: float
+    netSavings: float
+    status: str
+    tripBenchmarks: List[TripBenchmark]
+
+class DashboardAnalytics(BaseModel):
+    totalLifetimeSpent: float
+    averageCostPerTrip: float
+    totalTrips: int
+    spendingByCategory: Dict[str, float]
+    monthlySpending: Dict[str, float]
+    budgetEfficiency: Optional[BudgetEfficiency] = None
+
+
